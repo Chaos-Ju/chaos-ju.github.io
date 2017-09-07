@@ -95,18 +95,18 @@
 
 
 
-<meta name="description" content="问题背景 ES的版本1.5.1，实时框架 同事用我们公司自己的实时框架实时入ES，跑一段时间整个实时程序就会卡主，不再向ES中写数据了，重启就会短暂写一段时间后又会停止入数 可能问题：worker FullGC、Worker 现场死锁分析及解决问题保留worker执行的现场:jstack、jstat  看线程的gc状态机及CPU使用情况确定不是GC的问题，那么着重分析是不是有死锁？ 分析jstac">
+<meta name="description" content="问题背景 ES的版本1.5.1，实时框架 同事用我们公司自己的实时框架实时入ES，跑一段时间整个实时程序就会卡主，不再向ES中写数据了，重启就会短暂写一段时间后又会停止入数 可能问题：worker FullGC、Worker 现场死锁">
 <meta name="keywords" content="elasticsearch,信号量,死锁">
 <meta property="og:type" content="article">
 <meta property="og:title" content="elasticsearch-1.5.1-写操作死锁问题排查">
 <meta property="og:url" content="http://chaos-ju.github.io/2017/09/06/elasticsearch-1.5.1-写操作死锁问题排查/index.html">
 <meta property="og:site_name" content="九霄云外">
-<meta property="og:description" content="问题背景 ES的版本1.5.1，实时框架 同事用我们公司自己的实时框架实时入ES，跑一段时间整个实时程序就会卡主，不再向ES中写数据了，重启就会短暂写一段时间后又会停止入数 可能问题：worker FullGC、Worker 现场死锁分析及解决问题保留worker执行的现场:jstack、jstat  看线程的gc状态机及CPU使用情况确定不是GC的问题，那么着重分析是不是有死锁？ 分析jstac">
+<meta property="og:description" content="问题背景 ES的版本1.5.1，实时框架 同事用我们公司自己的实时框架实时入ES，跑一段时间整个实时程序就会卡主，不再向ES中写数据了，重启就会短暂写一段时间后又会停止入数 可能问题：worker FullGC、Worker 现场死锁">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2017-09-06T13:49:38.711Z">
+<meta property="og:updated_time" content="2017-09-07T01:28:05.942Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="elasticsearch-1.5.1-写操作死锁问题排查">
-<meta name="twitter:description" content="问题背景 ES的版本1.5.1，实时框架 同事用我们公司自己的实时框架实时入ES，跑一段时间整个实时程序就会卡主，不再向ES中写数据了，重启就会短暂写一段时间后又会停止入数 可能问题：worker FullGC、Worker 现场死锁分析及解决问题保留worker执行的现场:jstack、jstat  看线程的gc状态机及CPU使用情况确定不是GC的问题，那么着重分析是不是有死锁？ 分析jstac">
+<meta name="twitter:description" content="问题背景 ES的版本1.5.1，实时框架 同事用我们公司自己的实时框架实时入ES，跑一段时间整个实时程序就会卡主，不再向ES中写数据了，重启就会短暂写一段时间后又会停止入数 可能问题：worker FullGC、Worker 现场死锁">
 
 
 
@@ -391,7 +391,8 @@
         <h3 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h3><ul>
 <li>ES的版本1.5.1，实时框架</li>
 <li>同事用我们公司自己的实时框架实时入ES，跑一段时间整个实时程序就会卡主，不再向ES中写数据了，重启就会短暂写一段时间后又会停止入数</li>
-<li>可能问题：worker FullGC、Worker 现场死锁<h3 id="分析及解决问题"><a href="#分析及解决问题" class="headerlink" title="分析及解决问题"></a>分析及解决问题</h3><h4 id="保留worker执行的现场-jstack、jstat"><a href="#保留worker执行的现场-jstack、jstat" class="headerlink" title="保留worker执行的现场:jstack、jstat"></a>保留worker执行的现场:jstack、jstat</h4></li>
+<li>可能问题：worker FullGC、Worker 现场死锁<a id="more"></a>
+<h3 id="分析及解决问题"><a href="#分析及解决问题" class="headerlink" title="分析及解决问题"></a>分析及解决问题</h3><h4 id="保留worker执行的现场-jstack、jstat"><a href="#保留worker执行的现场-jstack、jstat" class="headerlink" title="保留worker执行的现场:jstack、jstat"></a>保留worker执行的现场:jstack、jstat</h4></li>
 </ul>
 <p>看线程的gc状态机及CPU使用情况确定不是GC的问题，那么着重分析是不是有死锁？</p>
 <p>分析jstack：多次打印进程jstack，确定卡主的位置，jstack 关于ES Thread 的stack关键详情如下：</p>
