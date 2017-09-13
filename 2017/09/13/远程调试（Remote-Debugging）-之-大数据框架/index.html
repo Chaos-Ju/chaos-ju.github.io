@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="hadoop,远程调试," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="前言远程调试在我们解决服务端问题的时候非常有用，能debug 服务端程序的运行状态；可以帮助我们分析框架或者服务程序源码，以用来学习之用； 开始 大数据框架 远程调试之前，先mark一下java的远程调试； 1远程debug的 一个重要原则是：保证你客户端（ide）调试的代码和服务端代码一致 java 远程调试JAVA的远程调试 基于Java Platform Debugger Architect">
+<meta name="keywords" content="hadoop,远程调试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="远程调试（Remote Debugging） 之 大数据框架">
+<meta property="og:url" content="http://chaos-ju.github.io/2017/09/13/远程调试（Remote-Debugging）-之-大数据框架/index.html">
+<meta property="og:site_name" content="九霄云外">
+<meta property="og:description" content="前言远程调试在我们解决服务端问题的时候非常有用，能debug 服务端程序的运行状态；可以帮助我们分析框架或者服务程序源码，以用来学习之用； 开始 大数据框架 远程调试之前，先mark一下java的远程调试； 1远程debug的 一个重要原则是：保证你客户端（ide）调试的代码和服务端代码一致 java 远程调试JAVA的远程调试 基于Java Platform Debugger Architect">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2017-09-13T08:49:43.960Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="远程调试（Remote Debugging） 之 大数据框架">
+<meta name="twitter:description" content="前言远程调试在我们解决服务端问题的时候非常有用，能debug 服务端程序的运行状态；可以帮助我们分析框架或者服务程序源码，以用来学习之用； 开始 大数据框架 远程调试之前，先mark一下java的远程调试； 1远程debug的 一个重要原则是：保证你客户端（ide）调试的代码和服务端代码一致 java 远程调试JAVA的远程调试 基于Java Platform Debugger Architect">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://chaos-ju.github.io/2017/09/13/远程调试（Remote-Debugging）-之-大数据框架/"/>
+
+
+
+
+
+  <title>远程调试（Remote Debugging） 之 大数据框架 | 九霄云外</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">九霄云外</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">采菊东篱，悠然南山</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://chaos-ju.github.io/2017/09/13/远程调试（Remote-Debugging）-之-大数据框架/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="鞠超超">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://wx2.sinaimg.cn/thumb300/006bfe38ly1fatw10veqtj30m80go40b0.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="九霄云外">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">远程调试（Remote Debugging） 之 大数据框架</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-13T16:47:52+08:00">
+                2017-09-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/hadoop/" itemprop="url" rel="index">
+                    <span itemprop="name">hadoop</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/09/13/远程调试（Remote-Debugging）-之-大数据框架/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/09/13/远程调试（Remote-Debugging）-之-大数据框架/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>远程调试在我们解决服务端问题的时候非常有用，能debug 服务端程序的运行状态；<br>可以帮助我们分析框架或者服务程序源码，以用来学习之用；</p>
+<p>开始 大数据框架 远程调试之前，先mark一下java的远程调试；</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">远程debug的 一个重要原则是：保证你客户端（ide）调试的代码和服务端代码一致</div></pre></td></tr></table></figure>
+<h3 id="java-远程调试"><a href="#java-远程调试" class="headerlink" title="java 远程调试"></a>java 远程调试</h3><p>JAVA的远程调试 基于Java Platform Debugger Architecture(JPDA:Java平台调试架构)。 JVM 本身支持指定参数来让java程序以调试模式启动。虚拟机运行在调试模式下，你只要去连接他的相应的监听端口就可以了。<br>典型的调试参数如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-Xdebug -Xrunjdwp:transport=dt_socket,address=8888,server=y,suspend=y</div></pre></td></tr></table></figure></p>
+<p>这些参数要做的事情就是启用远程调试和配置有效的选项：</p>
+<ul>
+<li>指定运行的被调试应用和调试者之间的通信协议，(ie: transport=dt_socket)</li>
+<li>远程被调试应用开通的端口，(ie: address=1043)， 可定义其他端口，比如9999</li>
+<li>server=y 表示这个 JVM 即将被调试</li>
+<li>suspend=n 用来告知 JVM 立即执行，不要等待未来将要附着上/连上（attached）的调试者。如果设成 y, 则应用将暂停不运行，直到有调试者连接上</li>
+</ul>
+<p>示例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8000,suspend=n application</div></pre></td></tr></table></figure></p>
+<p>debug 步骤：</p>
+<ul>
+<li>服务端的java进程启动的时候加上上述 jvm参数</li>
+<li>客户端端 ide 配置 remote 连接 服务端jvm 监听的端口 (具体配置方式 网上应该很多：  run —&gt;  Edit Congfigrations )</li>
+</ul>
+<h3 id="大数据框架调试"><a href="#大数据框架调试" class="headerlink" title="大数据框架调试"></a>大数据框架调试</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">万变不离其宗，大数据框架的远程debug的基本原理都和 上述的相同</div></pre></td></tr></table></figure>
+<h4 id="hive-远程调试的方式"><a href="#hive-远程调试的方式" class="headerlink" title="hive 远程调试的方式"></a>hive 远程调试的方式</h4><p>hive 已经给我提供了远程debug的功能,默认8000 端口</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[chaochao1@yz528 hive-0.13.0]$ hive --debug</div><div class="line">Listening for transport dt_socket at address: 8000</div></pre></td></tr></table></figure>
+<h4 id="hadoop-远程调试的方式（HDFS类似）"><a href="#hadoop-远程调试的方式（HDFS类似）" class="headerlink" title="hadoop 远程调试的方式（HDFS类似）"></a>hadoop 远程调试的方式（HDFS类似）</h4><p>不要在原来脚本修改，避免不必要的麻烦<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cp $HADOOP_HOME/bin/hadoop $HADOOP_HOME/bin/hadoopdebug</div></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">修改 $HADOOP_HOME/bin/hadoopdebug 脚本：</div><div class="line"></div><div class="line">修改前： HADOOP_OPTS=&quot;$HADOOP_OPTS -Dhadoop.security.logger=$&#123;HADOOP_SECURITY_LOGGER:-INFO,NullAppender&#125;&quot;</div><div class="line">修改后： HADOOP_OPTS=&quot;$HADOOP_OPTS -Dhadoop.security.logger=$&#123;HADOOP_SECURITY_LOGGER:-INFO,NullAppender&#125; -Xdebug -Xrunjdwp:transport=dt_socket,address=7777,server=y,suspend=y&quot;</div></pre></td></tr></table></figure>
+<p>调试示例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[chaochao1@yz528 chunlai]$  /data10/chaochao1/hadoop-2.7.3/bin/hadoopdebug jar ods_ad_account_impression.jar  /user/chaochao1/ods_ad_account_impression/2017/08/04/  /user/chaochao1/wb_ad_promotefansimp/\&#123;2017/08/03\&#125;/*/*/* 20170803 30</div><div class="line">Listening for transport dt_socket at address: 7777</div></pre></td></tr></table></figure></p>
+<h4 id="spark-远程调试的方式"><a href="#spark-远程调试的方式" class="headerlink" title="spark 远程调试的方式"></a>spark 远程调试的方式</h4><p>修改$SPARK_HOME/bin/spark-class脚本</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">修改之前：</div><div class="line">build_command() &#123;</div><div class="line">  &quot;$RUNrm NER&quot; -Xmx128m -cp &quot;$LAUNCH_CLASSPATH&quot; org.apache.spark.launcher.Main  &quot;$@&quot;</div><div class="line">  printf &quot;%d\0&quot; $?</div><div class="line">修改之后：</div><div class="line">build_command() &#123;</div><div class="line">  &quot;$RUNNER&quot; -Xmx128m -cp &quot;$LAUNCH_CLASSPATH&quot; org.apache.spark.launcher.Main   $JAVA_OPTS &quot;$@&quot;</div></pre></td></tr></table></figure>
+<p>每次想调试的时候，先export<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">export JAVA_OPTS=&quot;-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005&quot;</div></pre></td></tr></table></figure></p>
+<h4 id="yarn-和-hdfs-远程调试服务端代码（DN、NN、NM、RM）"><a href="#yarn-和-hdfs-远程调试服务端代码（DN、NN、NM、RM）" class="headerlink" title="yarn 和 hdfs 远程调试服务端代码（DN、NN、NM、RM）"></a>yarn 和 hdfs 远程调试服务端代码（DN、NN、NM、RM）</h4><p>由于我们集群的服务都会配置相应的环境变量，可以直接在对应的环境变量 添加 debug参数即可</p>
+<ul>
+<li><p>DataNode</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">export HADOOP_DATANODE_OPTS=&quot; -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005  -Xmx6144m -verbose:gc -Xloggc:/data0/hadoop/gclog/datanode.gc.log -XX:ErrorFile=/data0/hadoop/gclog/hs_err_pid.log -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError &quot;</div></pre></td></tr></table></figure>
+</li>
+<li><p>NodeManager</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">export YARN_NODEMANAGER_OPTS=&quot;-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005  -Xmx6144m -verbose:gc -Xloggc:/data0/hadoop/gclog/nodemanager.gc.log -XX:ErrorFile=/data0/hadoop/gclog/hs_err_pid.log -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError &quot;</div></pre></td></tr></table></figure>
+</li>
+<li><p>ResourceManager</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">export YARN_RESOURCEMANAGER_OPTS=&quot;-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005  -Xmx20480m -Xms20480m -Xmn3072m -verbose:gc -Xloggc:/data1/hadoop/gclog/yarn.gc.log -XX:ErrorFile=/data1/hadoop/gclog/hs_err_pid.log -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+UseCMSInitiatingOccupancyOnly -XX:+UseCMSCompactAtFullCollection -XX:CMSMaxAbortablePrecleanTime=1000 -XX:+CMSClassUnloadingEnabled -XX:+DisableExplicitGC -Dcom.sun.management.jmxremote.port=6001 -Dcom.sun.management.jmxremote.ssl=false  -Dcom.sun.management.jmxremote.authenticate=true -Dcom.sun.management.jmxremote.password.file=/usr/local/hadoop-2.4.0-yarn/etc/hadoop/jmxremote.password -Djava.util.Arrays.useLegacyMergeSort=true &quot;</div></pre></td></tr></table></figure>
+</li>
+<li><p>NameNode</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">export HADOOP_NAMENODE_OPTS=&quot;-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005  -Xmx140G -Xms140G -Xmn10G -verbose:gc -Xloggc:/data1/hadoop/gclog/namenode.gc.log -XX:ErrorFile=/data1/hadoop/gclog/hs_err_pid.log -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+UseCMSInitiatingOccupancyOnly -XX:+UseCMSCompactAtFullCollection -XX:CMSMaxAbortablePrecleanTime=1000 -XX:+CMSClassUnloadingEnabled -XX:+DisableExplicitGC -Dcom.sun.management.jmxremote.port=6000 -Dcom.sun.management.jmxremote.ssl=false  -Dcom.sun.management.jmxremote.authenticate=true -Dcom.sun.management.jmxremote.password.file=/usr/local/hadoop-2.4.0-hdfs/etc/hadoop/jmxremote.password&quot;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>万变不离其宗</li>
+<li>解决实际问题</li>
+<li>源码学习</li>
+<li>对于大数据框架：远程debug 之前要确定你要分析的代码是客户端还是服务端，是框架还是application</li>
+<li>有些线上环境可能不适合 远程debug 可以采用 btrace</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hadoop/" rel="tag"># hadoop</a>
+          
+            <a href="/tags/远程调试/" rel="tag"># 远程调试</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/09/12/request/" rel="next" title="给github的开源项目提交pull request">
+                <i class="fa fa-chevron-left"></i> 给github的开源项目提交pull request
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          
+            <img class="site-author-image" itemprop="image"
+              src="https://wx2.sinaimg.cn/thumb300/006bfe38ly1fatw10veqtj30m80go40b0.jpg"
+              alt="鞠超超" />
+          
+            <p class="site-author-name" itemprop="name">鞠超超</p>
+            <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+            
+              <a href="/archives/">
+            
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Chaos-Ju" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/u/5662965618" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.baidu.com/" title="百度" target="_blank">百度</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="https://cn.bing.com" title="BING" target="_blank">BING</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="https://tech.meituan.com" title="美团点评博客" target="_blank">美团点评博客</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#java-远程调试"><span class="nav-number">2.</span> <span class="nav-text">java 远程调试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#大数据框架调试"><span class="nav-number">3.</span> <span class="nav-text">大数据框架调试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#hive-远程调试的方式"><span class="nav-number">3.1.</span> <span class="nav-text">hive 远程调试的方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#hadoop-远程调试的方式（HDFS类似）"><span class="nav-number">3.2.</span> <span class="nav-text">hadoop 远程调试的方式（HDFS类似）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#spark-远程调试的方式"><span class="nav-number">3.3.</span> <span class="nav-text">spark 远程调试的方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#yarn-和-hdfs-远程调试服务端代码（DN、NN、NM、RM）"><span class="nav-number">3.4.</span> <span class="nav-text">yarn 和 hdfs 远程调试服务端代码（DN、NN、NM、RM）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">鞠超超</span>
+
+  
+</div>
+
+
+
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+本站总访问量 <span id="busuanzi_value_site_pv"></span> &nbsp&nbsp&nbsp
+您是第<span id="busuanzi_value_site_uv"></span>个来到的小伙伴
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://chaos-ju.github.io/2017/09/13/远程调试（Remote-Debugging）-之-大数据框架/';
+          this.page.identifier = '2017/09/13/远程调试（Remote-Debugging）-之-大数据框架/';
+          this.page.title = '远程调试（Remote Debugging） 之 大数据框架';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
